@@ -1,7 +1,3 @@
-/*
-g++ -std=c++17 -Wall -Wextra -O2 -DLOCAL p.cpp  -o p
-./p <in.txt> out.txt
-*/
 #ifdef LOCAL
     #undef _GLIBCXX_DEBUG
 #endif
