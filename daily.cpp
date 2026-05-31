@@ -70,7 +70,7 @@ template <class T>
 
 // #define ONPC
 
-void _GO() {
+void _GO() { 
   
 }
 

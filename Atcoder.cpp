@@ -398,6 +398,7 @@ struct ele {
 
 void _GO() {
     // Solution Here.....
+    int n;
 
 }
 

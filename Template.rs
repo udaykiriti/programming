@@ -18,7 +18,6 @@ fn main() {
 
     //let t = 1usize;
 
-
     if let Some(t_str) = iter.next() {
         let t: usize = t_str.parse().unwrap();
         for _ in 0..t {
