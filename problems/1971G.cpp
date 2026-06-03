@@ -88,9 +88,7 @@ void _GO() {
            swap(vec[i], vec[i + 1]);
            chgd = true;
          }
-       }sudo dnf clean all
-sudo dnf makecache
-sudo dnf install vim
+       }
     }
     for(int i = 0; i < n; i++){
         cout << vec[i] << " \n"[i == n - 1];
