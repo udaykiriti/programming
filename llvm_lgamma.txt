@@ -1,0 +1,341 @@
+diff --git a/libc/config/baremetal/aarch64/entrypoints.txt b/libc/config/baremetal/aarch64/entrypoints.txt
+index dcb50135232e..2c27769fe078 100644
+--- a/libc/config/baremetal/aarch64/entrypoints.txt
++++ b/libc/config/baremetal/aarch64/entrypoints.txt
+@@ -835,6 +835,7 @@ list(APPEND TARGET_LIBM_ENTRYPOINTS
+   libc.src.math.iscanonicalbf16
+   libc.src.math.issignalingbf16
+   libc.src.math.ldexpbf16
++  libc.src.math.lgammabf16
+   libc.src.math.llogbbf16
+   libc.src.math.llrintbf16
+   libc.src.math.llroundbf16
+diff --git a/libc/config/baremetal/arm/entrypoints.txt b/libc/config/baremetal/arm/entrypoints.txt
+index fac62bac939c..78b0ee578f47 100644
+--- a/libc/config/baremetal/arm/entrypoints.txt
++++ b/libc/config/baremetal/arm/entrypoints.txt
+@@ -846,6 +846,7 @@ list(APPEND TARGET_LIBM_ENTRYPOINTS
+   libc.src.math.iscanonicalbf16
+   libc.src.math.issignalingbf16
+   libc.src.math.ldexpbf16
++  libc.src.math.lgammabf16
+   libc.src.math.llogbbf16
+   libc.src.math.llrintbf16
+   libc.src.math.llroundbf16
+diff --git a/libc/config/baremetal/riscv/entrypoints.txt b/libc/config/baremetal/riscv/entrypoints.txt
+index a3b96225ff09..9893ee44d4e1 100644
+--- a/libc/config/baremetal/riscv/entrypoints.txt
++++ b/libc/config/baremetal/riscv/entrypoints.txt
+@@ -843,6 +843,7 @@ list(APPEND TARGET_LIBM_ENTRYPOINTS
+   libc.src.math.iscanonicalbf16
+   libc.src.math.issignalingbf16
+   libc.src.math.ldexpbf16
++  libc.src.math.lgammabf16
+   libc.src.math.llogbbf16
+   libc.src.math.llrintbf16
+   libc.src.math.llroundbf16
+diff --git a/libc/config/darwin/aarch64/entrypoints.txt b/libc/config/darwin/aarch64/entrypoints.txt
+index 914d2b7918da..56abccb09dce 100644
+--- a/libc/config/darwin/aarch64/entrypoints.txt
++++ b/libc/config/darwin/aarch64/entrypoints.txt
+@@ -656,6 +656,7 @@ list(APPEND TARGET_LIBM_ENTRYPOINTS
+   libc.src.math.iscanonicalbf16
+   libc.src.math.issignalingbf16
+   libc.src.math.ldexpbf16
++  libc.src.math.lgammabf16
+   libc.src.math.llogbbf16
+   libc.src.math.llrintbf16
+   libc.src.math.llroundbf16
+diff --git a/libc/config/darwin/x86_64/entrypoints.txt b/libc/config/darwin/x86_64/entrypoints.txt
+index b941c968255e..bc164e4fcd3f 100644
+--- a/libc/config/darwin/x86_64/entrypoints.txt
++++ b/libc/config/darwin/x86_64/entrypoints.txt
+@@ -278,6 +278,7 @@ list(APPEND TARGET_LIBM_ENTRYPOINTS
+   libc.src.math.iscanonicalbf16
+   libc.src.math.issignalingbf16
+   libc.src.math.ldexpbf16
++  libc.src.math.lgammabf16
+   libc.src.math.llogbbf16
+   libc.src.math.llrintbf16
+   libc.src.math.llroundbf16
+diff --git a/libc/config/gpu/amdgpu/entrypoints.txt b/libc/config/gpu/amdgpu/entrypoints.txt
+index c76900a8371f..913db74f49f1 100644
+--- a/libc/config/gpu/amdgpu/entrypoints.txt
++++ b/libc/config/gpu/amdgpu/entrypoints.txt
+@@ -684,6 +684,7 @@ list(APPEND TARGET_LIBM_ENTRYPOINTS
+   libc.src.math.iscanonicalbf16
+   libc.src.math.issignalingbf16
+   libc.src.math.ldexpbf16
++  libc.src.math.lgammabf16
+   libc.src.math.llogbbf16
+   libc.src.math.llrintbf16
+   libc.src.math.llroundbf16
+diff --git a/libc/config/gpu/nvptx/entrypoints.txt b/libc/config/gpu/nvptx/entrypoints.txt
+index 6538732f785f..1fdcd32ff10e 100644
+--- a/libc/config/gpu/nvptx/entrypoints.txt
++++ b/libc/config/gpu/nvptx/entrypoints.txt
+@@ -686,6 +686,7 @@ list(APPEND TARGET_LIBM_ENTRYPOINTS
+   libc.src.math.iscanonicalbf16
+   libc.src.math.issignalingbf16
+   libc.src.math.ldexpbf16
++  libc.src.math.lgammabf16
+   libc.src.math.llogbbf16
+   libc.src.math.llrintbf16
+   libc.src.math.llroundbf16
+diff --git a/libc/config/linux/aarch64/entrypoints.txt b/libc/config/linux/aarch64/entrypoints.txt
+index a50923fddec5..e7d42623cd56 100644
+--- a/libc/config/linux/aarch64/entrypoints.txt
++++ b/libc/config/linux/aarch64/entrypoints.txt
+@@ -948,6 +948,7 @@ list(APPEND TARGET_LIBM_ENTRYPOINTS
+   libc.src.math.iscanonicalbf16
+   libc.src.math.issignalingbf16
+   libc.src.math.ldexpbf16
++  libc.src.math.lgammabf16
+   libc.src.math.llogbbf16
+   libc.src.math.llrintbf16
+   libc.src.math.llroundbf16
+diff --git a/libc/config/linux/arm/entrypoints.txt b/libc/config/linux/arm/entrypoints.txt
+index 49b30ef1830f..8bac9164441d 100644
+--- a/libc/config/linux/arm/entrypoints.txt
++++ b/libc/config/linux/arm/entrypoints.txt
+@@ -526,6 +526,7 @@ list(APPEND TARGET_LIBM_ENTRYPOINTS
+   libc.src.math.iscanonicalbf16
+   libc.src.math.issignalingbf16
+   libc.src.math.ldexpbf16
++  libc.src.math.lgammabf16
+   libc.src.math.llogbbf16
+   libc.src.math.llrintbf16
+   libc.src.math.llroundbf16
+diff --git a/libc/config/linux/riscv/entrypoints.txt b/libc/config/linux/riscv/entrypoints.txt
+index 51c769d853a5..5374674401b6 100644
+--- a/libc/config/linux/riscv/entrypoints.txt
++++ b/libc/config/linux/riscv/entrypoints.txt
+@@ -969,6 +969,7 @@ list(APPEND TARGET_LIBM_ENTRYPOINTS
+   libc.src.math.iscanonicalbf16
+   libc.src.math.issignalingbf16
+   libc.src.math.ldexpbf16
++  libc.src.math.lgammabf16
+   libc.src.math.llogbbf16
+   libc.src.math.llrintbf16
+   libc.src.math.llroundbf16
+diff --git a/libc/config/linux/x86_64/entrypoints.txt b/libc/config/linux/x86_64/entrypoints.txt
+index 0723e58d0dd5..c3d284b75825 100644
+--- a/libc/config/linux/x86_64/entrypoints.txt
++++ b/libc/config/linux/x86_64/entrypoints.txt
+@@ -666,7 +666,6 @@ set(TARGET_LIBM_ENTRYPOINTS
+     libc.src.math.ldexp
+     libc.src.math.ldexpf
+     libc.src.math.ldexpl
+-    libc.src.math.lgammabf16
+     libc.src.math.llogb
+     libc.src.math.llogbf
+     libc.src.math.llogbl
+@@ -1035,6 +1034,7 @@ list(APPEND TARGET_LIBM_ENTRYPOINTS
+   libc.src.math.iscanonicalbf16
+   libc.src.math.issignalingbf16
+   libc.src.math.ldexpbf16
++  libc.src.math.lgammabf16
+   libc.src.math.llogbbf16
+   libc.src.math.llrintbf16
+   libc.src.math.llroundbf16
+diff --git a/libc/shared/math.h b/libc/shared/math.h
+index 2baeb07294a3..9482efb1dc1b 100644
+--- a/libc/shared/math.h
++++ b/libc/shared/math.h
+@@ -305,6 +305,7 @@
+ #include "math/ldexpf128.h"
+ #include "math/ldexpf16.h"
+ #include "math/ldexpl.h"
++#include "math/lgammabf16.h"
+ #include "math/llogb.h"
+ #include "math/llogbbf16.h"
+ #include "math/llogbf.h"
+diff --git a/libc/src/__support/math/lgammabf16.h b/libc/src/__support/math/lgammabf16.h
+index cc8da2dee77f..1bf8f025ac88 100644
+--- a/libc/src/__support/math/lgammabf16.h
++++ b/libc/src/__support/math/lgammabf16.h
+@@ -1,4 +1,4 @@
+-//===-- Implementation header for lgammabf16 --------------------*- C++ -*-===//
++//===-- Implementation of lgammabf16 ----------------------------*- C++ -*-===//
+ //
+ // Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+ // See https://llvm.org/LICENSE.txt for license information.
+@@ -11,12 +11,23 @@
+ 
+ #include "src/__support/FPUtil/bfloat16.h"
+ #include "src/__support/FPUtil/cast.h"
+-#include "src/__support/common.h"
+ #include "src/__support/macros/config.h"
+ 
+ namespace LIBC_NAMESPACE_DECL {
+ namespace math {
+ 
++// lgammabf16(x) = lgamma(x) rounded to bfloat16
++//
++// Strategy: promote bfloat16 -> float, call __builtin_lgammaf, then narrow
++// the float result back to bfloat16.
++//
++// This is correctly rounded because bfloat16 has only 7 mantissa bits vs
++// float's 23, so the float result has far more precision than needed; a
++// single narrowing cast gives a correctly-rounded bfloat16 result.
++//
++// Special-case behaviour (NaN, ±0 → +Inf, negative integers → +Inf,
++// ±Inf → +Inf) is inherited transparently from __builtin_lgammaf.
++// The global signgam is set as a side effect.
+ LIBC_INLINE bfloat16 lgammabf16(bfloat16 x) {
+   return fputil::cast<bfloat16>(__builtin_lgammaf(fputil::cast<float>(x)));
+ }
+diff --git a/libc/src/math/lgammabf16.h b/libc/src/math/lgammabf16.h
+index 965c8c881eb0..4c63945c6a6a 100644
+--- a/libc/src/math/lgammabf16.h
++++ b/libc/src/math/lgammabf16.h
+@@ -9,8 +9,8 @@
+ #ifndef LLVM_LIBC_SRC_MATH_LGAMMABF16_H
+ #define LLVM_LIBC_SRC_MATH_LGAMMABF16_H
+ 
++#include "src/__support/FPUtil/bfloat16.h"
+ #include "src/__support/macros/config.h"
+-#include "src/__support/macros/properties/types.h"
+ 
+ namespace LIBC_NAMESPACE_DECL {
+ 
+diff --git a/libc/test/shared/CMakeLists.txt b/libc/test/shared/CMakeLists.txt
+index 84a8d4bf79b3..237a7b1e209f 100644
+--- a/libc/test/shared/CMakeLists.txt
++++ b/libc/test/shared/CMakeLists.txt
+@@ -297,6 +297,7 @@ add_fp_unittest(
+     libc.src.__support.math.ldexpbf16
+     libc.src.__support.math.ldexpf
+     libc.src.__support.math.ldexpl
++    libc.src.__support.math.lgammabf16
+     libc.src.__support.math.llogb
+     libc.src.__support.math.llogbbf16
+     libc.src.__support.math.llrint
+diff --git a/libc/test/shared/shared_math_test.cpp b/libc/test/shared/shared_math_test.cpp
+index 634778380dc8..c42c2ffd12f5 100644
+--- a/libc/test/shared/shared_math_test.cpp
++++ b/libc/test/shared/shared_math_test.cpp
+@@ -785,7 +785,8 @@ TEST(LlvmLibcSharedMathTest, AllBFloat16) {
+ 
+   EXPECT_FP_EQ(bfloat16(5.0),
+                LIBC_NAMESPACE::shared::hypotbf16(bfloat16(4.0), bfloat16(3.0)));
+-
++  EXPECT_FP_EQ(bfloat16(0.0f),
++               LIBC_NAMESPACE::shared::lgammabf16(bfloat16(1.0f)));
+   EXPECT_FP_EQ(bfloat16(0.0), LIBC_NAMESPACE::shared::logbbf16(bfloat16(1.0f)));
+ 
+   bfloat16 setpayloadbf16_res = bfloat16(0.0);
+diff --git a/libc/test/src/math/CMakeLists.txt b/libc/test/src/math/CMakeLists.txt
+index 4213c11eca51..c288ed3a8715 100644
+--- a/libc/test/src/math/CMakeLists.txt
++++ b/libc/test/src/math/CMakeLists.txt
+@@ -30,6 +30,18 @@ add_fp_unittest(
+     FMA_OPT__ONLY
+ )
+ 
++add_fp_unittest(
++  lgammabf16_test
++  NEED_MPFR
++  SUITE
++    libc-math-unittests
++  SRCS
++    lgammabf16_test.cpp
++  DEPENDS
++    libc.src.math.lgammabf16
++    libc.src.__support.FPUtil.fp_bits
++)
++
+ add_fp_unittest(
+   cos_test
+   NEED_MPFR
+diff --git a/libc/test/src/math/exhaustive/CMakeLists.txt b/libc/test/src/math/exhaustive/CMakeLists.txt
+index 2d1301d3a1e6..408e25f41fed 100644
+--- a/libc/test/src/math/exhaustive/CMakeLists.txt
++++ b/libc/test/src/math/exhaustive/CMakeLists.txt
+@@ -26,6 +26,19 @@ add_fp_unittest(
+     -lpthread
+ )
+ 
++add_fp_unittest(
++  lgammabf16_test
++  NO_RUN_POSTBUILD
++  NEED_MPFR
++  SUITE
++    libc_math_exhaustive_tests
++  SRCS
++    lgammabf16_test.cpp
++  DEPENDS
++    libc.src.math.lgammabf16
++    libc.src.__support.FPUtil.fp_bits
++)
++
+ add_fp_unittest(
+   rsqrtf_test
+   NO_RUN_POSTBUILD
+diff --git a/libc/test/src/math/smoke/lgammabf16_test.cpp b/libc/test/src/math/smoke/lgammabf16_test.cpp
+index 5bb0ae4e81bc..d0f4d15c5b73 100644
+--- a/libc/test/src/math/smoke/lgammabf16_test.cpp
++++ b/libc/test/src/math/smoke/lgammabf16_test.cpp
+@@ -1,4 +1,4 @@
+-//===-- Smoke tests for lgammabf16 -----------------------------*- C++ -*-===//
++//===-- Unittests for lgammabf16 ------------------------------------------===//
+ //
+ // Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+ // See https://llvm.org/LICENSE.txt for license information.
+@@ -6,14 +6,48 @@
+ //
+ //===----------------------------------------------------------------------===//
+ 
+-#include "src/__support/FPUtil/bfloat16.h"
+ #include "src/math/lgammabf16.h"
++#include "src/__support/FPUtil/bfloat16.h"
++#include "src/__support/FPUtil/cast.h"
++#include "test/UnitTest/FEnvSafeTest.h"
++#include "test/UnitTest/FPMatcher.h"
+ #include "test/UnitTest/Test.h"
+ 
+-TEST(LlvmLibcLgammabf16Test, SpecialNumbers) {
+-  LIBC_NAMESPACE::fputil::BFloat16 one(1.0f);
+-  LIBC_NAMESPACE::fputil::BFloat16 two(2.0f);
+-  // lgamma(1) = 0, lgamma(2) = 0
+-  (void)LIBC_NAMESPACE::lgammabf16(one);
+-  (void)LIBC_NAMESPACE::lgammabf16(two);
+-}
++class LlvmLibcLgammaBf16Test : public LIBC_NAMESPACE::testing::FEnvSafeTest {
++  DECLARE_SPECIAL_CONSTANTS(bfloat16)
++
++public:
++  void test_special_numbers() {
++    // lgammabf16(NaN) = NaN
++    EXPECT_FP_EQ(aNaN, LIBC_NAMESPACE::lgammabf16(aNaN));
++
++    // lgammabf16(+0) = +Inf (pole error)
++    EXPECT_FP_EQ(inf, LIBC_NAMESPACE::lgammabf16(zero));
++
++    // lgammabf16(-0) = +Inf (pole error)
++    EXPECT_FP_EQ(inf, LIBC_NAMESPACE::lgammabf16(neg_zero));
++
++    // lgammabf16(+Inf) = +Inf
++    EXPECT_FP_EQ(inf, LIBC_NAMESPACE::lgammabf16(inf));
++
++    // lgammabf16(-Inf) = +Inf
++    EXPECT_FP_EQ(inf, LIBC_NAMESPACE::lgammabf16(neg_inf));
++
++    // lgamma(1.0) = 0.0
++    EXPECT_FP_EQ(zero, LIBC_NAMESPACE::lgammabf16(
++                           LIBC_NAMESPACE::fputil::cast<bfloat16>(1.0f)));
++
++    // lgamma(2.0) = 0.0
++    EXPECT_FP_EQ(zero, LIBC_NAMESPACE::lgammabf16(
++                           LIBC_NAMESPACE::fputil::cast<bfloat16>(2.0f)));
++
++    // lgamma(negative integer) = +Inf (pole error)
++    EXPECT_FP_EQ(inf, LIBC_NAMESPACE::lgammabf16(
++                          LIBC_NAMESPACE::fputil::cast<bfloat16>(-1.0f)));
++
++    EXPECT_FP_EQ(inf, LIBC_NAMESPACE::lgammabf16(
++                          LIBC_NAMESPACE::fputil::cast<bfloat16>(-2.0f)));
++  }
++};
++
++TEST_F(LlvmLibcLgammaBf16Test, SpecialNumbers) { test_special_numbers(); }

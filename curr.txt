@@ -1,0 +1,158 @@
+diff --git a/libc/src/__support/math/CMakeLists.txt b/libc/src/__support/math/CMakeLists.txt
+index 792c77bea06a..298afcd7ba5e 100644
+--- a/libc/src/__support/math/CMakeLists.txt
++++ b/libc/src/__support/math/CMakeLists.txt
+@@ -60,6 +60,7 @@ add_header_library(
+     libc.src.__support.FPUtil.multiply_add 
+     libc.src.__support.macros.config
+     libc.src.__support.macros.optimization
++    libc.src.__support.math.sinf
+     libc.hdr.errno_macros
+     libc.hdr.fenv_macros
+ )
+diff --git a/libc/src/__support/math/lgammabf16.h b/libc/src/__support/math/lgammabf16.h
+index 70694544fcc3..ef17ba559708 100644
+--- a/libc/src/__support/math/lgammabf16.h
++++ b/libc/src/__support/math/lgammabf16.h
+@@ -10,6 +10,7 @@
+ 
+ #include "hdr/errno_macros.h"
+ #include "hdr/fenv_macros.h"
++#include "hdr/math_macros.h"
+ #include "src/__support/CPP/bit.h"
+ #include "src/__support/FPUtil/FEnvImpl.h"
+ #include "src/__support/FPUtil/FPBits.h"
+@@ -19,6 +20,7 @@
+ #include "src/__support/FPUtil/multiply_add.h"
+ #include "src/__support/macros/config.h"
+ #include "src/__support/macros/optimization.h"
++#include "src/__support/math/sinf.h"
+ 
+ namespace LIBC_NAMESPACE_DECL {
+ namespace math {
+@@ -163,12 +165,8 @@ LIBC_INLINE bfloat16 lgammabf16(bfloat16 x) {
+     float ax = -xf;
+     float frac = ax - static_cast<float>(static_cast<int>(ax));
+ 
+-    constexpr float A1 = 0x1.55553cp-2f; // pi^2/6 approx
+-    constexpr float A2 = 0x1.11100ap-7f; // pi^4/120 approx
+     constexpr float PI = 0x1.921fb6p+1f;
+-    float frac2 = frac * frac;
+-    // sin(pi*frac) = PI * frac * polyeval(frac^2, 1, -A1, A2)
+-    float sin_pi_frac = PI * frac * fputil::polyeval(frac2, 1.0f, -A1, A2);
++    float sin_pi_frac = math::sinf(PI * frac);
+     if (sin_pi_frac < 0.0f)
+       sin_pi_frac = -sin_pi_frac;
+ 
+diff --git a/libc/src/math/generic/CMakeLists.txt b/libc/src/math/generic/CMakeLists.txt
+index c03843f2fcfb..b603a9bce589 100644
+--- a/libc/src/math/generic/CMakeLists.txt
++++ b/libc/src/math/generic/CMakeLists.txt
+@@ -4869,7 +4869,6 @@ add_entrypoint_object(
+     libc.src.__support.math.bf16fmal
+ )
+ 
+-
+ add_entrypoint_object(
+   lgammabf16
+   SRCS
+diff --git a/libc/test/src/math/smoke/CMakeLists.txt b/libc/test/src/math/smoke/CMakeLists.txt
+index ad7387a52d41..0065399ae5f1 100644
+--- a/libc/test/src/math/smoke/CMakeLists.txt
++++ b/libc/test/src/math/smoke/CMakeLists.txt
+@@ -46,6 +46,8 @@ add_fp_unittest(
+   DEPENDS
+     libc.src.math.lgammabf16
+     libc.src.__support.FPUtil.bfloat16
++    libc.hdr.errno_macros
++    libc.hdr.fenv_macros
+ )
+ 
+ add_fp_unittest(
+diff --git a/libc/test/src/math/smoke/lgammabf16_test.cpp b/libc/test/src/math/smoke/lgammabf16_test.cpp
+index 393cae08fd10..bab80960fc74 100644
+--- a/libc/test/src/math/smoke/lgammabf16_test.cpp
++++ b/libc/test/src/math/smoke/lgammabf16_test.cpp
+@@ -5,6 +5,7 @@
+ // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+ //
+ //===----------------------------------------------------------------------===//
++
+ #include "hdr/errno_macros.h"
+ #include "hdr/fenv_macros.h"
+ #include "src/__support/FPUtil/bfloat16.h"
+@@ -15,18 +16,51 @@
+ 
+ class LlvmLibcLgammaBf16Test : public LIBC_NAMESPACE::testing::FEnvSafeTest {
+   DECLARE_SPECIAL_CONSTANTS(bfloat16)
++
+ public:
+   void test_special_numbers() {
+-    EXPECT_FP_EQ(aNaN, LIBC_NAMESPACE::lgammabf16(aNaN));
+-    EXPECT_FP_EQ(inf, LIBC_NAMESPACE::lgammabf16(zero));
+-    EXPECT_FP_EQ(inf, LIBC_NAMESPACE::lgammabf16(neg_zero));
+-    EXPECT_FP_EQ(inf, LIBC_NAMESPACE::lgammabf16(inf));
+-    EXPECT_FP_EQ(inf, LIBC_NAMESPACE::lgammabf16(neg_inf));
+-    EXPECT_FP_EQ(zero, LIBC_NAMESPACE::lgammabf16(bfloat16(1.0f)));
+-    EXPECT_FP_EQ(zero, LIBC_NAMESPACE::lgammabf16(bfloat16(2.0f)));
+-    EXPECT_FP_EQ(inf, LIBC_NAMESPACE::lgammabf16(bfloat16(-1.0f)));
+-    EXPECT_FP_EQ(inf, LIBC_NAMESPACE::lgammabf16(bfloat16(-2.0f)));
++    // aNaN -> aNaN, no exception
++    EXPECT_FP_EQ_ALL_ROUNDING(aNaN, LIBC_NAMESPACE::lgammabf16(aNaN));
++    EXPECT_MATH_ERRNO(0);
++
++    // sNaN -> aNaN, FE_INVALID
++    EXPECT_FP_EQ_WITH_EXCEPTION(aNaN, LIBC_NAMESPACE::lgammabf16(sNaN),
++                                FE_INVALID);
++    EXPECT_MATH_ERRNO(0);
++
++    // +Inf -> +Inf
++    EXPECT_FP_EQ_ALL_ROUNDING(inf, LIBC_NAMESPACE::lgammabf16(inf));
++    EXPECT_MATH_ERRNO(0);
++
++    // -Inf -> +Inf
++    EXPECT_FP_EQ_ALL_ROUNDING(inf, LIBC_NAMESPACE::lgammabf16(neg_inf));
++    EXPECT_MATH_ERRNO(0);
++
++    // +-0 -> +Inf, pole error
++    EXPECT_FP_EQ_WITH_EXCEPTION_ALL_ROUNDING(
++        inf, LIBC_NAMESPACE::lgammabf16(zero), FE_DIVBYZERO);
++    EXPECT_MATH_ERRNO(ERANGE);
++
++    EXPECT_FP_EQ_WITH_EXCEPTION_ALL_ROUNDING(
++        inf, LIBC_NAMESPACE::lgammabf16(neg_zero), FE_DIVBYZERO);
++    EXPECT_MATH_ERRNO(ERANGE);
++
++    // lgamma(1) = lgamma(2) = 0
++    EXPECT_FP_EQ_ALL_ROUNDING(zero, LIBC_NAMESPACE::lgammabf16(bfloat16(1.0f)));
++    EXPECT_MATH_ERRNO(0);
++
++    EXPECT_FP_EQ_ALL_ROUNDING(zero, LIBC_NAMESPACE::lgammabf16(bfloat16(2.0f)));
++    EXPECT_MATH_ERRNO(0);
++
++    // Negative integers -> +Inf, pole error
++    EXPECT_FP_EQ_WITH_EXCEPTION_ALL_ROUNDING(
++        inf, LIBC_NAMESPACE::lgammabf16(bfloat16(-1.0f)), FE_DIVBYZERO);
++    EXPECT_MATH_ERRNO(ERANGE);
++
++    EXPECT_FP_EQ_WITH_EXCEPTION_ALL_ROUNDING(
++        inf, LIBC_NAMESPACE::lgammabf16(bfloat16(-2.0f)), FE_DIVBYZERO);
++    EXPECT_MATH_ERRNO(ERANGE);
+   }
+ };
+ 
+-TEST_F(LlvmLibcLgammaBf16Test, SpecialNumbers) { test_special_numbers(); }
++TEST_F(LlvmLibcLgammaBf16Test, SpecialNumbers) { test_special_numbers(); }
+\ No newline at end of file
+diff --git a/utils/bazel/llvm-project-overlay/libc/BUILD.bazel b/utils/bazel/llvm-project-overlay/libc/BUILD.bazel
+index 55daa7e103e4..4d2d6c6c474b 100644
+--- a/utils/bazel/llvm-project-overlay/libc/BUILD.bazel
++++ b/utils/bazel/llvm-project-overlay/libc/BUILD.bazel
+@@ -6246,6 +6246,7 @@ libc_support_library(
+         ":__support_fputil_polyeval",
+         ":__support_macros_config",
+         ":__support_macros_optimization",
++        ":__support_math_sinf",
+         ":hdr_errno_macros",
+         ":hdr_fenv_macros",
+     ],
