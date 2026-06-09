@@ -5,8 +5,6 @@ A Templates for  programming solutions in C++(mostly).
 Structure
 -----------------
 - Atcoder.cpp - AtCoder problem template
-- Templates/ - templates for programming
-	- from top programmers 
 - algo/ - debug header file
 
 references(docs/)
