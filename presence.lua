@@ -8,7 +8,7 @@ return {
     update_interval = 750,
     background_cycle = true,
 
-    -- Display & Presentation Settings
+    -- Display Settings
     display = {
       theme = "catppuccin", -- Icon theme
       flavor = "dark", -- Theme flavor ('dark', 'light', 'accent')
@@ -20,10 +20,10 @@ return {
     -- Advanced Idle/AFK Customization
     idle = {
       enabled = true,
-      timeout = 300000, -- 5 minutes (in milliseconds)
-      show_status = true, -- Still show you are in Neovim when AFK
+      timeout = 300000, -- 5 minutes (in ms)
+      show_status = true, -- Still show you are in.
       ignore_focus = true, -- Keeps idle status even if Nvim window is focused
-      unidle_on_focus = true, -- Wakes up status immediately upon clicking into Neovim
+      unidle_on_focus = true, -- Wakes up status immediately upon.
       details = function()
         return "[ z Z z ] disconnected"
       end,
