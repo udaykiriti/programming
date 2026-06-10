@@ -71,44 +71,11 @@ template <class T>
 // #define ONPC
 
 void _GO() {
-  int n, k ,m;
-  cin >> n >> k >> m;
-  map<int, vector<int64_t>> grps;
+	int n;
+	cin >> n;
+	int64_t k;
+	cin >> k;
 
-  for(int i{0}; i < n; i++){
-    int x, y;
-    cin >> x >> y;
-    grps[x].push_back(y);
-  }
-
-  for(auto& prss: grps){
-    sort(prss.second.rbegin(), prss.second.rend());
-  }
-
-  vector<int64_t> bst, rem;
-
-  for(auto& pr : grps){
-    bst.push_back(pr.second[0]);
-    for(int i{1}; i < pr.second.size(); i++){
-      rem.push_back(pr.second[i]);
-    }
-  }
-
-  sort(bst.rbegin(), bst.rend());
-  sort(rem.rbegin(), rem.rend());
-  ///
-  int64_t t0T{0};
-
-  for(int i{0}; i < m; i++){
-    t0T += bst[i];
-  }
-
-  for(int i = m; i < bst.size(); i++) rem.push_back(bst[i]);
-  sort(rem.rbegin(), rem.rend());
-
-  for(int i{0}; i < k - m; i++) t0T += rem[i];
-
-  cout << t0T << endl;
 }
 
 int main(/* int argc, char *argv[] */) {
