@@ -44,7 +44,7 @@ _ts() {
   fi
 }
 log() { printf "%b%s%b\n" "$BLUE" "$(_ts)>> $*" "$NC"; }
-ok()  { printf "%b%s%b\n" "$GREEN" "$(_ts)$*" "$NC"; }
+ok() { printf "%b%s%b\n" "$GREEN" "$(_ts)$*" "$NC"; }
 err() { printf "%b%s%b\n" "$RED" "$(_ts)$*" "$NC" >&2; }
 
 while getopts ":s:i:o:c:f:th" opt; do
@@ -86,7 +86,7 @@ if [[ -z "$SRC" ]]; then
     exit 1
   }
   SRC="${files[0]}"
-  log "${RED}[;-]]No source specified — using first .cpp: ${YELLOW}${SRC}${NC}"
+  log "${RED}[;-]]No source specified - using first .cpp: ${YELLOW}${SRC}${NC}"
 fi
 
 [[ -f "$SRC" ]] || {
@@ -120,8 +120,8 @@ BANNER
   printf "%b" "${BLUE}"
   cat <<'TAGLINE'
        C++ BUILD SYSTEM
-   compile → link → execute
-   no mercy. no warnings.
+   compile >> link >> execute
+   no mercy.. no warnings..
 TAGLINE
 
   printf "%b\n" "${NC}"

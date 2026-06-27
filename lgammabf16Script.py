@@ -41,23 +41,22 @@ def to_hex_float(v):
 
 def fit_one_interval(n):
     center = n + 0.5
+    f = lambda t: mpmath.loggamma(mpmath.mpf(t + center))
 
-    # 200 points across (n, n+1), shifted so center maps to t=0
-    xs = np.linspace(n + 1e-9, n + 1 - 1e-9, 200)
-    ts = xs - center
-    ys = np.array([lgamma_hp(x) for x in xs])
+    # chebyfit returns descending order [c4, c3, c2, c1, c0]
+    # degree=4 means we need n+1=5 coefficients, pass deg=4
+    coeffs_mp = mpmath.chebyfit(f, [-0.5, 0.5], 5)  # 5 = number of coeffs = degree+1
 
-    # fit in double, then truncate to float32 
-    coeffs_descending = np.polyfit(ts, ys, 4)
-    coeffs_f32 = coeffs_descending[::-1].astype(np.float32)  # ascending: c0 + c1*t + ...
+    # Reverse to ascending order: c0 + c1*t + c2*t^2 + c3*t^3 + c4*t^4
+    coeffs_f32 = np.array([float(c) for c in reversed(coeffs_mp)], dtype=np.float32)
 
-    # measure error using the actual float32 coefficients on a denser grid
+    # Measure max relative error on dense grid using float32 coefficients
     xs_check = np.linspace(n + 1e-6, n + 1 - 1e-6, 2000)
     ts_check = xs_check - center
     approx = np.polyval(coeffs_f32[::-1], ts_check)
-    exact  = np.array([lgamma_hp(x) for x in xs_check])
+    exact   = np.array([lgamma_hp(x) for x in xs_check])
 
-    # skip near-zero lgamma values (zeros at x=1,2 cause relative error blowup)
+    # Skip near-zero lgamma values (zeros at x=1,2 blow up relative error)
     mask = np.abs(exact) > 0.01
     rel_err = np.max(np.abs((approx[mask] - exact[mask]) / exact[mask]))
 
