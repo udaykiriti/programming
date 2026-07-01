@@ -4,13 +4,13 @@
 # Run with: sollya lgammabf16.sollya
 
 // lgammabf16.sollya
-f = log(gamma(x));
+f := log(gamma(x));
 
 for n from 1 to 7 do {
-    center = n + 0.5;
-    g = f(x + center);
-    P = fpminimax(g, [|0,1,2,3,4|], [|24,24,24,24,24|], [-0.5, 0.5], relative);
-    err = supnorm(P, g, [-0.5, 0.5], relative, 2^(-50));
+    center := n + 0.5;
+    g := f(x + center);
+    P := fpminimax(g, [|0,1,2,3,4|], [|24,24,24,24,24|], [-0.5, 0.5], relative);
+    err := supnorm(P, g, [-0.5, 0.5], relative, 2^(-50));
     print("// [", n, ",", n+1, "), center=", center, ", max_rel_err=", err);
     for i from 0 to 4 do {
         printsingle(coeff(P, i));
