@@ -1,0 +1,16 @@
+# Script to generate LGAMMA_POLY coefficients for lgammabf16.h
+# Fits a degree-4 polynomial to lgamma(x) on each interval [n, n+1)
+# centered at n+0.5, using fpminimax for near-minimax float32 coefficients.
+# Run with: sollya lgammabf16.sollya
+
+f := log(gamma(x));
+
+for n from 1 to 7 do {
+    center = n + 0.5;
+    lo = n;
+    hi = n + 1;
+    g = f(x + center);
+    P = fpminimax(g, [|0,1,2,3,4|], [|24,24,24,24,24|], [-0.5, 0.5], relative);
+    print("// [", n, ",", n+1, "), center=", center, ", err=", log2(supnorm(P, g, [-0.5, 0.5], relative, 2^(-50))));
+    print(P);
+};
