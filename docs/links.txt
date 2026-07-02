@@ -1,0 +1,19 @@
+Links or Resources
+==================
+
+OS
+--
+  virtual Memory [stackoverflow]
+    - https://stackoverflow.com/questions/22290347/understanding-virtual-address-virtual-memory-and-paging
+    - https://stackoverflow.com/questions/14347206/what-are-the-differences-between-virtual-memory-and-physical-memory
+    - https://stackoverflow.com/questions/78365561/stack-size-in-relation-to-virtual-memory
+    - https://stackoverflow.com/questions/50655241/virtual-memory-usage
+    - https://stackoverflow.com/questions/26424676/virtual-address-space-size-vs-physical-address-space-size
+    - https://stackoverflow.com/questions/9414565/understanding-virtual-address-and-virtual-address-space
+    - https://stackoverflow.com/questions/65019219/how-does-entire-physical-address-space-is-mapped-in-virtual-address-space
+    - https://stackoverflow.com/questions/69487123/virtual-address-vs-physical-address
+    - https://stackoverflow.com/questions/15851225/difference-between-physical-logical-virtual-memory-address
+    - https://stackoverflow.com/questions/20819352/does-virtual-address-space-resides-in-virtual-memory
+    - https://stackoverflow.com/questions/24208761/virtual-and-physical-address-space-being-same
+    - https://stackoverflow.com/questions/62997536/what-is-the-difference-between-linear-physical-logical-and-virtual-memory-addr
+    - https://cs.stackexchange.com/questions/84860/if-the-virtual-address-space-can-be-larger-than-the-physical-address-space-how
