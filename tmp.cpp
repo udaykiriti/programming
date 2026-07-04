@@ -1,6 +1,8 @@
 #include<bits/stdc++.h>
 #include<type_traits>
 
+#define endl '\n'
+
 template <typename T1, typename T2>
 typename std::common_type<T1, T2>::type maxi(T1 a, T2 b) {
     return (b < a ? a : b);

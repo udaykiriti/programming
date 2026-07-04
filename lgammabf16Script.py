@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Generates LGAMMA_POLY coefficients for lgammabf16.h
+LGAMMA_POLY coefficients for lgammabf16.h
 
 Fits a degree-4 polynomial to lgamma(x) on each interval [n, n+1)
 for n = 1..7, centered at the midpoint n+0.5. mpmath provides a
@@ -14,7 +14,8 @@ Note on relative error for [1,2) and [2,3):
 Paste the output into the LGAMMA_POLY table inside lgamma_positive_d()
 in lgammabf16.h.
 
-Requires: numpy, mpmath
+used:
+    numpy, mpmath
 """
 
 import re
