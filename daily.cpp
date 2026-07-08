@@ -75,7 +75,6 @@ void _GO() {
 	cin >> n;
 	int64_t k;
 	cin >> k;
-
 }
 
 int main(/* int argc, char *argv[] */) {
