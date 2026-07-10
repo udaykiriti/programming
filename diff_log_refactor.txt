@@ -1,0 +1,300 @@
+diff --git a/libc/src/__support/math/lgammabf16.h b/libc/src/__support/math/lgammabf16.h
+index 0b6219f670ca..0c1387db1879 100644
+--- a/libc/src/__support/math/lgammabf16.h
++++ b/libc/src/__support/math/lgammabf16.h
+@@ -25,6 +25,8 @@
+ namespace LIBC_NAMESPACE_DECL {
+ namespace math {
+ 
++namespace lgammabf16_internal {
++
+ // lgamma_positive_d: compute lgamma(x) for x > 0, returning double.
+ //
+ // Takes double so callers can pass (1.0 + ax) without float precision loss.
+@@ -40,13 +42,21 @@ namespace math {
+ // which fails the directed-rounding tolerance test. Polynomials for [4,5) and
+ // above have max_rel_err <= 6.61e-7, keeping final error well under 0.1 ULP.
+ //
+-
+ LIBC_INLINE double lgamma_positive_d(double x) {
+   // Coefficients for lgamma on [n, n+1), centered at n+0.5.
+   // Each row: {c0, c1, c2, c3, c4} for Estrin evaluation
+   // where t = x - (n + 0.5), n = 1..7.
+   // Maximum relative errors per interval.
+-  static constexpr float LGAMMA_POLY[7][5] = {
++  // lgamma(x) on [n, n+1), n = 1..7, as P(t) where t = x - (n+0.5).
++  // P is a degree-4 fit to lgamma(t + n+0.5) on t in [-0.5, 0.5],
++  // generated via mpmath (no native lgamma in Sollya):
++  //   > mpmath.mp.dps = 50
++  //   > f = lambda t: mpmath.loggamma(t + (n + 0.5))
++  //   > coeffs = mpmath.chebyfit(f, [-0.5, 0.5], 5)
++  // Reversed to ascending [c0..c4] and rounded to float32 for Estrin.
++  // Max relative error: ~1.29e-4 (n=1) to ~7.10e-8 (n=7), skipping
++  // |lgamma(x)| < 0.01 where error explodes near the zeros at x=1,2.
++  constexpr float LGAMMA_POLY[7][5] = {
+       // [1,2), center=1.5, max_relative_err=1.29e-04
+       {-0x1.eeb280p-4f, 0x1.2f128ap-5f, 0x1.de1488p-2f, -0x1.2d373cp-3f,
+        0x1.08d8aep-4f},
+@@ -76,31 +86,35 @@ LIBC_INLINE double lgamma_positive_d(double x) {
+   if (x >= 8.0) {
+     // Stirling series; 0.5*ln(2*pi)
+     constexpr double HALF_LN_2PI = 0x1.d67f1c864beb4p-1;
+-    double lx = math::log(x);
++    double lx = math::log_internal::log_finite(x);
+     double x2 = x * x;
+     double result = (x - 0.5) * lx - x + HALF_LN_2PI;
+     result += 1.0 / (12.0 * x) - 1.0 / (360.0 * x * x2);
+     return result;
+   }
+ 
+-  // For x in (0, 4): apply recurrence lgamma(x) = lgamma(x+n) -
+-  // ln(x*(x+1)*...*(x+n-1)) until xs reaches [4, 8). We unroll the loop
+-  // explicitly for efficiency. Using the [4,5) polynomial (max_rel_err=6.61e-7)
+-  // avoids the large errors near the edges of the [2,3) polynomial
+-  // (max_rel_err=9.98e-6).
+-  double log_product, xs;
++  // For x in (0, 4): apply recurrence relation
++  // lgamma(x) = lgamma(x+n) - ln(x*(x+1)*...*(x+n-1))
++  // to shift x into the stable [4, 8) range for polynomial evaluation.
++  double log_product, xs, product;
+ 
+   if (x >= 3.0) {
+-    log_product = math::log(x);
++    log_product = math::log_internal::log_finite(x);
+     xs = x + 1.0;
+   } else if (x >= 2.0) {
+-    log_product = math::log(x * (x + 1.0));
++    product = x * (x + 1.0);
++    log_product = math::log_internal::log_finite(product);
+     xs = x + 2.0;
+   } else if (x >= 1.0) {
+-    log_product = math::log(x * (x + 1.0) * (x + 2.0));
++    product = x * (x + 1.0);
++    product = product * (x + 2.0);
++    log_product = math::log_internal::log_finite(product);
+     xs = x + 3.0;
+   } else {
+-    log_product = math::log(x * (x + 1.0) * (x + 2.0) * (x + 3.0));
++    product = x * (x + 1.0);
++    product = product * (x + 2.0);
++    product = product * (x + 3.0);
++    log_product = math::log_internal::log_finite(product);
+     xs = x + 4.0;
+   }
+ 
+@@ -129,6 +143,8 @@ LIBC_INLINE double lgamma_positive_d(double x) {
+   return lgamma_xs - log_product;
+ }
+ 
++} // namespace lgammabf16_internal
++
+ LIBC_INLINE bfloat16 lgammabf16(bfloat16 x) {
+   using FPBits = fputil::FPBits<bfloat16>;
+   FPBits x_bits(x);
+@@ -209,13 +225,15 @@ LIBC_INLINE bfloat16 lgammabf16(bfloat16 x) {
+ 
+     // A fast (not correctly-rounded) log suffices here: the final result is
+     // cast to bfloat16, so we only need ~8 bits of accuracy in log_sin_d.
+-    double log_sin_d = (sin_pi_frac_d == 1.0)
+-                           ? 0.0
+-                           : math::log(static_cast<float>(sin_pi_frac_d));
++    double log_sin_d =
++        (sin_pi_frac_d == 1.0)
++            ? 0.0
++            : math::log_internal::log_finite(static_cast<float>(sin_pi_frac_d));
+ 
+     // Use double addition: 1.0 + double(ax) preserves tiny ax values that
+     // would be lost by 1.0f + ax in float (e.g. ax=2e-5 rounds to 1.0f).
+-    double lgp_d = lgamma_positive_d(1.0 + static_cast<double>(ax));
++    double lgp_d =
++        lgammabf16_internal::lgamma_positive_d(1.0 + static_cast<double>(ax));
+     double result_d = LN_PI_D - log_sin_d - lgp_d;
+ 
+     // Cast directly from double to bfloat16, bypassing float.
+@@ -234,7 +252,8 @@ LIBC_INLINE bfloat16 lgammabf16(bfloat16 x) {
+   //      tie-break rounds to even -> 0x4154 = 13.25  (WRONG)
+   //   Direct double->bfloat16: 13.281250434 > midpoint 13.28125 -> 0x4155
+   //   = 13.3125 (correct)
+-  return fputil::cast<bfloat16>(lgamma_positive_d(static_cast<double>(xf)));
++  return fputil::cast<bfloat16>(
++      lgammabf16_internal::lgamma_positive_d(static_cast<double>(xf)));
+ }
+ 
+ } // namespace math
+diff --git a/libc/src/__support/math/log.h b/libc/src/__support/math/log.h
+index 917d1cc51cbb..5255e7ef8e1f 100644
+--- a/libc/src/__support/math/log.h
++++ b/libc/src/__support/math/log.h
+@@ -741,89 +741,41 @@ LIBC_INLINE double log_accurate(int e_x, int index, double m_x) {
+ }
+ #endif // LIBC_MATH_HAS_SKIP_ACCURATE_PASS
+ 
+-} // namespace log_internal
+-
+-LIBC_INLINE LIBC_CONSTEXPR double log(double x) {
+-  using namespace log_internal;
++// Core log(x) computation, shared between the public log() entry point and
++// internal callers (e.g. lgammabf16) that have already validated x is a
++// normal, finite, positive double (not 0, negative, NaN, Inf, or subnormal).
++LIBC_INLINE double log_finite_impl(uint64_t x_u, int init_x_e) {
+   using FPBits_t = typename fputil::FPBits<double>;
+ 
+-  FPBits_t xbits(x);
+-  uint64_t x_u = xbits.uintval();
+-
+-  int x_e = -FPBits_t::EXP_BIAS;
+-
+-  if (LIBC_UNLIKELY(xbits == FPBits_t::one())) {
+-    // log(1.0) = +0.0
+-    return 0.0;
+-  }
+-
+-  if (LIBC_UNLIKELY(xbits.uintval() < FPBits_t::min_normal().uintval() ||
+-                    xbits.uintval() > FPBits_t::max_normal().uintval())) {
+-    if (x == 0.0) {
+-      // return -Inf and raise FE_DIVBYZERO.
+-      fputil::set_errno_if_required(ERANGE);
+-      fputil::raise_except_if_required(FE_DIVBYZERO);
+-      return FPBits_t::inf(Sign::NEG).get_val();
+-    }
+-    if (xbits.is_neg() && !xbits.is_nan()) {
+-      fputil::set_errno_if_required(EDOM);
+-      fputil::raise_except_if_required(FE_INVALID);
+-      return FPBits_t::quiet_nan().get_val();
+-    }
+-    if (xbits.is_inf_or_nan()) {
+-      return x;
+-    }
+-    // Normalize denormal inputs.
+-    xbits = FPBits_t(x * 0x1.0p52);
+-    x_e -= 52;
+-    x_u = xbits.uintval();
+-  }
+-
+-  // log(x) = log(2^x_e * x_m)
+-  //        = x_e * log(2) + log(x_m)
++  int x_e = init_x_e;
+ 
+-  // Range reduction for log(x_m):
+-  // For each x_m, we would like to find r such that:
+-  //   -2^-8 <= r * x_m - 1 < 2^-7
+   int shifted = static_cast<int>(x_u >> 45);
+   int index = shifted & 0x7F;
+   double r = RD[index];
+ 
+-  // Add unbiased exponent. Add an extra 1 if the 8 leading fractional bits are
+-  // all 1's.
+   x_e += static_cast<int>((x_u + (1ULL << 45)) >> 52);
+   double e_x = static_cast<double>(x_e);
+ 
+-  // hi is exact
+   double hi = fputil::multiply_add(e_x, LOG_2_HI, LOG_R_DD[index].hi);
+-  // lo errors ~ e_x * LSB(LOG_2_LO) + LSB(LOG_R[index].lo) + rounding err
+-  //           <= 2 * (e_x * LSB(LOG_2_LO) + LSB(LOG_R[index].lo))
+   double lo = fputil::multiply_add(e_x, LOG_2_LO, LOG_R_DD[index].lo);
+ 
+-  // Set m = 1.mantissa.
+   uint64_t x_m = (x_u & 0x000F'FFFF'FFFF'FFFFULL) | 0x3FF0'0000'0000'0000ULL;
+   double m = FPBits_t(x_m).get_val();
+ 
+   double u{}, u_sq{};
+   fputil::DoubleDouble r1;
+ 
+-  // Perform exact range reduction
+ #ifdef LIBC_TARGET_CPU_HAS_FMA_DOUBLE
+-  u = fputil::multiply_add(r, m, -1.0); // exact
++  u = fputil::multiply_add(r, m, -1.0);
+ #else
+   uint64_t c_m = x_m & 0x3FFF'E000'0000'0000ULL;
+   double c = FPBits_t(c_m).get_val();
+-  u = fputil::multiply_add(r, m - c, CD[index]); // exact
+-#endif // LIBC_TARGET_CPU_HAS_FMA_DOUBLE
++  u = fputil::multiply_add(r, m - c, CD[index]);
++#endif
+ 
+-  // Exact sum:
+-  //   r1.hi + r1.lo = e_x * log(2)_hi - log(r)_hi + u
+   r1 = fputil::exact_add(hi, u);
+-
+-  // Error of u_sq = ulp(u^2);
+   u_sq = u * u;
+-  // Total error is bounded by ~ C * ulp(u^2).
+-  // Degree-7 minimax polynomial
++
+   double p0 = fputil::multiply_add(u, LOG_COEFFS[1], LOG_COEFFS[0]);
+   double p1 = fputil::multiply_add(u, LOG_COEFFS[3], LOG_COEFFS[2]);
+   double p2 = fputil::multiply_add(u, LOG_COEFFS[5], LOG_COEFFS[4]);
+@@ -832,24 +784,63 @@ LIBC_INLINE LIBC_CONSTEXPR double log(double x) {
+ #ifdef LIBC_MATH_HAS_SKIP_ACCURATE_PASS
+   return r1.hi + p;
+ #else
+-  // Technicallly error of r1.lo is bounded by:
+-  //    hi*ulp(log(2)_lo) + C*ulp(u^2)
+-  // To simplify the error computation a bit, we replace |hi|*ulp(log(2)_lo)
+-  // with the upper bound: 2^11 * ulp(log(2)_lo) = 2^-85.
+-  // Total error is bounded by ~ C * ulp(u^2) + 2^-85.
+   double err = fputil::multiply_add(u_sq, P_ERR, HI_ERR);
+-
+-  // Lower bound from the result
+   double left = r1.hi + (p - err);
+-  // Upper bound from the result
+   double right = r1.hi + (p + err);
+ 
+-  // Ziv's test if fast pass is accurate enough.
+   if (left == right)
+     return left;
+ 
+   return log_accurate(x_e, index, u);
+-#endif // LIBC_MATH_HAS_SKIP_ACCURATE_PASS
++#endif
++}
++
++// Convenience wrapper for callers that already know x is a normal, finite,
++// positive double (not 0, negative, NaN, Inf, or subnormal).
++LIBC_INLINE double log_finite(double x) {
++  using FPBits_t = typename fputil::FPBits<double>;
++  FPBits_t xbits(x);
++  return log_finite_impl(xbits.uintval(), -FPBits_t::EXP_BIAS);
++}
++
++} // namespace log_internal
++
++LIBC_INLINE LIBC_CONSTEXPR double log(double x) {
++  using namespace log_internal;
++  using FPBits_t = typename fputil::FPBits<double>;
++
++  FPBits_t xbits(x);
++  uint64_t x_u = xbits.uintval();
++
++  int x_e = -FPBits_t::EXP_BIAS;
++
++  if (LIBC_UNLIKELY(xbits == FPBits_t::one())) {
++    // log(1.0) = +0.0
++    return 0.0;
++  }
++
++  if (LIBC_UNLIKELY(xbits.uintval() < FPBits_t::min_normal().uintval() ||
++                    xbits.uintval() > FPBits_t::max_normal().uintval())) {
++    if (x == 0.0) {
++      // return -Inf and raise FE_DIVBYZERO.
++      fputil::set_errno_if_required(ERANGE);
++      fputil::raise_except_if_required(FE_DIVBYZERO);
++      return FPBits_t::inf(Sign::NEG).get_val();
++    }
++    if (xbits.is_neg() && !xbits.is_nan()) {
++      fputil::set_errno_if_required(EDOM);
++      fputil::raise_except_if_required(FE_INVALID);
++      return FPBits_t::quiet_nan().get_val();
++    }
++    if (xbits.is_inf_or_nan()) {
++      return x;
++    }
++    // Normalize denormal inputs.
++    xbits = FPBits_t(x * 0x1.0p52);
++    x_e -= 52;
++    x_u = xbits.uintval();
++  }
++  return log_finite_impl(x_u, x_e);
+ }
+ 
+ } // namespace math
