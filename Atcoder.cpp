@@ -1,44 +1,3 @@
-/*
-              __                  __
-             ( _)                ( _)
-            / / \              / /\_\_
-           / /   \            / / | \ \
-          / /     \          / /  |\ \ \
-         /  /   ,  \ ,       / /   /|  \ \
-        /  /    |\_ /|      / /   / \   \_\
-       /  /  |\/ _ '_|\    / /   /   \    \
-      |  /   |/  0 \0\ \  / |    |    \    \
-      |    |\|      \_\_ /  /    |     \    \
-      |  | |/    \.\ o\o)  /      \     |    \
-      \    |     /\`v-v  /        |    |     \
-       | \/    /_| \_|  /         |    | \    \
-       | |    /__/_     /   _____  |    |  \    \
-       \|    [__]  \_/  |_________  \   |   \    ()
-        /    [___] (    \         \  |\ |   |   //
-       |    [___]                  |\| \|   /  |/
-      /|    [____]                  \  |/\ / / ||
-    (  \   [____ /     ) _\      \  \    \| | ||
-      \  \  [_____|    / /     __/    \   / / //
-      |   \ [_____/   / /        \    |   \/ //
-      |   /  '----|   /=\____   _/    |   / //
-   __ /  /        |  /   ___/  _/\    \  | ||
-  (/-(/-\)       /   \  (/\/\)/  |    /  | /
-                (/\/\)           /   /   //
-                       _________/   /    /
-                      \____________/
-                   buGs geT EaTeNN.
-*/
-
-/*
-  author:  -----
-  created: 03 08:27:32
-*/
-
-
-/*
-g++ -std=c++17 -Wall -Wextra -O2 -DLOCAL p.cpp  -o p
-./p <in.txt> out.txt
-*/
 #undef _GLIBCXX_DEBUG
 
 /*
@@ -398,8 +357,49 @@ struct ele {
 
 void _GO() {
     // Solution Here.....
-    int n;
+    int n, q;
+    cin >> n >> q;
 
+    vector<int64_t> vec1(n), vec2(n);
+
+    for(int i{0}; i < n; i++){
+	    cin >> vec1[i];
+    }
+
+    for(int i{0}; i < n; i++){
+	    cin >> vec2[i];
+    }
+
+    for(int qq{0}; qq < q; qq++){
+	    int tp, i;
+	    int64_t xx;
+	    cin >> tp >> i >> xx;
+
+	    i--;
+
+	    if(1 == tp) vec1[i] = xx;
+	    else vec2[i] = xx;
+
+	    vector<pair<int64_t, int64_t>> jbs(n);
+
+	    for(int j{0}; j < n; j++){
+		    jbs[j] = {vec2[j], vec1[j]};
+	    }
+
+	   sort(all(jbs), [](const pair<int64_t, int64_t>&_a, const pair<int64_t, int64_t>&_b){
+			   return _a.first > _b.first;
+			   });
+
+			   int64_t maxi{0}, cur{0};
+
+			   for(int j{0}; j < n; j++){
+			   
+			   cur += jbs[j].second;
+			   int64_t finT = cur + jbs[j].first;
+			   if(finT > maxi) maxi = finT;
+			   }
+               cout << maxi << endl;
+    }
 }
 
 int main(/* int argc, char *argv[] */) {

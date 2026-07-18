@@ -16,13 +16,12 @@ using namespace std;
 #endif
 
 using db = long double;  // or double, if TL is tight
-using str = string;      // like python!
+using str = string;
 
 /* Complex to expand compared to normal ones, but looks cool.*/
 #define tcT template <class T
 #define tcTU tcT, class U
-#define tcTUV tcT, class U, class V // It doesn't make any Sense
-// ^ lol this makes everything look weird but I'll try it
+#define tcTUV tcT, class U, class V 
 tcT > using V = vector<T>;
 tcT > using V1 = V<T>;
 tcT > using VV = V<V<T>>;
@@ -36,8 +35,6 @@ using vb = V<bool>;
 using vl = V<int64_t>;
 using vd = V<db>;
 using vs = V<str>;
-
-#define FIXED(x) do { cout << fixed << setprecision(x); } while(0)
 
 const int MOD = 998244353;  // 1e9+7;
 constexpr int64_t INF = 1e18;
